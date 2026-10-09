@@ -1,0 +1,6 @@
+.home/
+__pycache__/
+*.pyc
+dist/
+.DS_Store
+*.spec

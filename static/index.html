@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mac 状态监控中心</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ================= 顶部系统栏 ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="2" width="20" height="20" rx="5" stroke="url(#lg)" stroke-width="1.5"/>
+        <rect x="7" y="7" width="10" height="10" rx="2.5" stroke="url(#lg)" stroke-width="1.5"/>
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="24" y2="24">
+          <stop stop-color="#8b7cf6"/><stop offset="1" stop-color="#5f9dff"/>
+        </linearGradient></defs>
+      </svg>
+      <span class="title">Mac 状态监控中心</span>
+    </div>
+    <div class="sys-chips">
+      <span class="chip" id="chip-machine">Apple Silicon</span>
+      <span class="chip" id="chip-cores">—</span>
+      <span class="chip" id="chip-gpu">—</span>
+      <span class="chip" id="chip-psu">—</span>
+      <span class="chip" id="chip-link">—</span>
+      <span class="chip" id="chip-tb">—</span>
+    </div>
+    <div class="status-zone">
+      <div class="stat" id="thermal-badge"><i class="dot ok"></i><span id="thermal-text">—</span></div>
+      <div class="stat" id="stream-badge"><i class="dot wait"></i><span class="st">连接中…</span></div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- ============ 4 列网格：3 行指标 + 底部整排进程 ============ -->
+  <main class="grid">
+
+    <!-- 第 1 排：四大核心指标（环心大数字 + 右侧数据条） -->
+    <section class="card" id="card-cpu">
+      <div class="c-head"><span class="c-name">CPU</span>
+        <span class="c-dim" id="sub-cpu">E — MHz　|　P — MHz</span></div>
+      <div class="gauge">
+        <div class="gauge-ring">
+          <canvas id="ring-cpu"></canvas>
+          <div class="gauge-num"><b id="num-cpu">—</b><em>%</em></div>
+        </div>
+        <div class="gauge-side">
+          <div class="gs"><span class="k">E 核</span>
+            <span class="bar"><i id="cpu-e-bar" style="background:var(--blue)"></i></span>
+            <span class="v" id="cpu-e">—</span></div>
+          <div class="gs"><span class="k">P 核</span>
+            <span class="bar"><i id="cpu-p-bar" style="background:var(--purple)"></i></span>
+            <span class="v" id="cpu-p">—</span></div>
+          <div class="gs"><span class="k">最忙核</span>
+            <span class="bar"><i id="cpu-peak-bar" style="background:var(--blue)"></i></span>
+            <span class="v" id="cpu-peak">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card primary" id="card-gpu">
+      <div class="c-head"><span class="c-name">GPU</span>
+        <span class="c-dim" id="sub-gpu">— MHz</span></div>
+      <div class="gauge">
+        <div class="gauge-ring">
+          <canvas id="ring-gpu"></canvas>
+          <div class="gauge-num"><b id="num-gpu">—</b><em>%</em></div>
+        </div>
+        <div class="gauge-side">
+          <div class="gs"><span class="k">活跃</span>
+            <span class="bar"><i id="gpu-act-bar" style="background:var(--purple)"></i></span>
+            <span class="v" id="gpu-act">—</span></div>
+          <div class="gs"><span class="k">FP32</span>
+            <span class="bar"><i id="gpu-f32-bar" style="background:var(--purple)"></i></span>
+            <span class="v" id="gpu-f32">—</span></div>
+          <div class="gs"><span class="k">FP16</span>
+            <span class="bar"><i id="gpu-f16-bar" style="background:var(--blue)"></i></span>
+            <span class="v" id="gpu-f16">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="card-mem">
+      <div class="c-head"><span class="c-name">内存</span>
+        <span class="c-dim" id="sub-mem">— / — GB</span></div>
+      <div class="gauge">
+        <div class="gauge-ring">
+          <canvas id="ring-mem"></canvas>
+          <div class="gauge-num"><b id="num-mem">—</b><em>%</em></div>
+        </div>
+        <div class="gauge-side">
+          <div class="gs"><span class="k">已用</span>
+            <span class="bar"><i id="mem-used-bar" style="background:var(--mint)"></i></span>
+            <span class="v" id="mem-used">—</span></div>
+          <div class="gs"><span class="k">压缩</span>
+            <span class="bar"><i id="mem-comp-bar" style="background:var(--purple)"></i></span>
+            <span class="v" id="mem-comp">—</span></div>
+          <div class="gs"><span class="k">可用</span>
+            <span class="bar"><i id="mem-free-bar" style="background:rgba(255,255,255,.25)"></i></span>
+            <span class="v" id="mem-free">—</span></div>
+        </div>
+      </div>
+      <div class="c-foot"><span id="sub-mem2">交换 — · 压力 —</span></div>
+    </section>
+
+    <section class="card" id="card-power">
+      <div class="c-head"><span class="c-name">功耗</span>
+        <b class="c-num n-amber hero" id="num-power">—<em>W</em></b></div>
+      <div class="c-chart"><canvas id="power-chart"></canvas></div>
+      <div class="c-foot"><span id="sub-power">系统功耗 · 近 60s</span></div>
+    </section>
+
+    <!-- 第 2 排：每核 · 温度 · 风扇 · 内存带宽 -->
+    <section class="card" id="card-cores">
+      <div class="c-head"><span class="c-name">每核占用</span>
+        <span class="c-dim" id="sub-cores">E —% · P —%</span></div>
+      <div class="c-chart"><canvas id="cores-chart"></canvas></div>
+    </section>
+
+    <section class="card" id="card-temp">
+      <div class="c-head"><span class="c-name">核心温度</span>
+        <span class="c-dim" id="sub-temp">封装平均</span></div>
+      <div class="gauge">
+        <div class="gauge-ring">
+          <canvas id="ring-temp"></canvas>
+          <div class="gauge-num"><b id="num-temp">—</b><em>°C</em></div>
+        </div>
+        <div class="temp-list" id="temp-list"></div>
+      </div>
+      <div class="c-foot"><span>红标 = 组内峰值　·　告警线 95°C</span></div>
+    </section>
+
+    <section class="card" id="card-fans">
+      <div class="c-head"><span class="c-name">风扇转速</span>
+        <b class="c-num n-blue sm" id="num-fans">—<em>RPM</em></b></div>
+      <div class="c-chart"><canvas id="fans-chart"></canvas></div>
+      <div class="c-foot"><span id="sub-fans">模式 —</span></div>
+    </section>
+
+    <section class="card" id="card-dram">
+      <div class="c-head"><span class="c-name">内存带宽</span>
+        <b class="c-num n-violet sm" id="num-dram">—<em>GB/s</em></b></div>
+      <div class="c-chart"><canvas id="dram-chart"></canvas></div>
+      <div class="c-foot"><span id="sub-dram">ANE —</span></div>
+    </section>
+
+    <!-- 第 3 排：网络 · 磁盘+容量 · 监听端口 · 外设供电 -->
+    <section class="card" id="card-net">
+      <div class="c-head"><span class="c-name">网络流量</span>
+        <b class="c-num n-blue sm" id="sub-net">↓ — · ↑ —</b></div>
+      <div class="c-chart"><canvas id="net-chart"></canvas></div>
+      <div class="c-foot"><span id="sub-netfoot">链路 — · 端口 —</span></div>
+    </section>
+
+    <section class="card" id="card-disk">
+      <div class="c-head"><span class="c-name">磁盘与容量</span>
+        <b class="c-num n-mint sm" id="sub-disk">读 — · 写 —</b></div>
+      <div class="c-chart"><canvas id="disk-chart"></canvas></div>
+      <div class="vols inline" id="vols"></div>
+      <div class="c-foot"><span id="sub-diskfoot">IOPS 读 — · 写 —</span></div>
+    </section>
+
+    <section class="card" id="card-ports">
+      <div class="c-head"><span class="c-name">监听端口</span>
+        <span class="c-dim" id="sub-ports">—</span></div>
+      <div class="portlist" id="portlist"></div>
+    </section>
+
+    <section class="card" id="card-periph">
+      <div class="c-head"><span class="c-name">外设与供电</span>
+        <span class="c-dim" id="sub-periph">—</span></div>
+      <div class="plist" id="plist"></div>
+    </section>
+
+    <!-- 第 4 排：进程独占整排（文字多，需要横向空间） -->
+    <section class="card wide" id="card-procs">
+      <div class="c-head"><span class="c-name">进程 TOP</span>
+        <span class="c-dim" id="sub-procs">—</span>
+        <div class="tools">
+          <input id="proc-search" type="search" placeholder="搜索进程…" autocomplete="off">
+          <div class="seg" id="proc-sort">
+            <button data-sort="cpu" class="on">CPU</button>
+            <button data-sort="mem">内存</button>
+            <button data-sort="gpu">GPU</button>
+          </div>
+        </div></div>
+      <div class="table-wrap"><table id="proc-table">
+        <thead><tr>
+          <th class="num">PID</th><th>进程</th><th>占比</th>
+          <th class="num">CPU %</th><th class="num">内存 RSS</th>
+          <th class="num">GPU ms/s</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </main>
+
+</div>
+<script src="/app.js"></script>
+</body>
+</html>
