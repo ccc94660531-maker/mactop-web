@@ -3,6 +3,8 @@
 把本机 [mactop](https://github.com/metaspartan/mactop) 封装成一个独立的 **Web 仪表盘**：
 深色 HUD 毛玻璃界面、实时刷新，数据通信与 mactop 完全一致（原样转发 `mactop --headless --format json` 的采样数据，无任何加工）。
 
+![界面截图](docs/screenshot.png)
+
 ```
 ┌────────────┐  headless JSON   ┌──────────────┐  SSE (/api/stream)   ┌──────────┐
 │  mactop    │ ───────────────► │  server.py   │ ────────────────────► │ 浏览器 UI │
