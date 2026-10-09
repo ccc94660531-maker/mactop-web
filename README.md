@@ -26,14 +26,16 @@
 
 ## 独立应用（推荐）
 
-`~/Applications/Mac状态监控中心.app`（约 16 MB）——**双击即用**：PyInstaller 打包，
+**下载**：[GitHub Release](https://github.com/ccc94660531-maker/mactop-web/releases) 里的
+`MacStatusCenter-v1.0.0.dmg`（约 17 MB，Apple Silicon）——**拖入 Applications 即完成安装**：
 内嵌 Python 运行时 + mactop 二进制 + 全部前端资源 + 专属图标，目标 Mac 无需安装任何东西。
 
-- 启动弹出**独立应用窗口**（内嵌系统 WKWebView，非浏览器标签页），全量监控指标实时刷新；
+- 安装后双击启动，弹出**独立应用窗口**（内嵌系统 WKWebView，非浏览器标签页），全量监控指标实时刷新；
 - 拖到副屏后按窗口绿色按钮全屏，即可常显；关闭窗口 = 退出应用；
+- 首次启动右键 →「打开」（未做 Apple 公证，Gatekeeper 只提示一次）；
 - 只做后台服务（无界面）：`open -a Mac状态监控中心 --args --no-browser`。
 
-重新打包（本机需要 Python 3）：
+重新打包（本机需要 Python 3 + Homebrew）：
 
 ```bash
 python3 -m venv /tmp/pbenv && /tmp/pbenv/bin/pip install pyinstaller pywebview
@@ -57,7 +59,10 @@ iconutil -c icns /tmp/ic/AppIcon.iconset -o /tmp/ic/AppIcon.icns
   --add-data "$(brew --prefix)/bin/mactop:." \
   --icon /tmp/ic/AppIcon.icns \
   --distpath dist server.py
-# 产物 dist/Mac状态监控中心.app → 拷到 ~/Applications
+# 安装包（拖拽安装布局）
+mkdir -p /tmp/dmgstage && cp -R "dist/Mac状态监控中心.app" /tmp/dmgstage/ && ln -s /Applications /tmp/dmgstage/Applications
+hdiutil create -volname "Mac 状态监控中心" -srcfolder /tmp/dmgstage -ov -format UDZO dist/MacStatusCenter-vX.Y.Z.dmg
+# 产物：dist/MacStatusCenter-vX.Y.Z.dmg → GitHub Release 附件
 ```
 
 ## 运行（源码方式）
